@@ -30,14 +30,43 @@
       * sanitizando automáticamente los valores de entrada.
       */
      async create(bookData) 
-     {
-         const { user_id, filename, title, author, categoryId: category, pages, file_path } = bookData;
-         const [rows] = await db.execute('CALL sp_create_book(?, ?, ?, ?, ?, ?, ?)',
-             [user_id, filename, title, author, category, pages, file_path]);
-             
-         // Los Stored Procedures de inserción fueron diseñados para devolver LAST_INSERT_ID()
-         return rows[0][0].insertId;
-     }
+      {
+       const { user_id, filename, title, author, category, pages, file_path } = bookData;
+
+        const values = [
+            user_id,
+            filename,
+            title,
+            author,
+            category,
+            pages,
+            file_path
+        ];
+
+         const names = [
+            'user_id',
+            'filename',
+            'title',
+            'author',
+            'category',
+            'pages',
+            'file_path'
+        ];
+
+    names.forEach((name, i) => {
+        if (values[i] === undefined) {
+            console.error('Parámetro indefinido:', name);
+        }
+    });
+    console.log("DATOS RECIBIDOS:", bookData);
+    const [rows] = await db.execute(
+        'CALL sp_create_book(?, ?, ?, ?, ?, ?, ?)',
+        values
+    );
+
+    return rows[0][0].insertId;
+}
+       
  
      /**
       * @brief Obtiene el listado completo de documentos pertenecientes a un cliente.
@@ -88,9 +117,9 @@
       */
      async update(id, userId, bookData) 
      {
-         const { title, author, categoryId, pages } = bookData;
+         const { title, author, category, pages } = bookData;
 
-         await db.execute('CALL sp_update_book_metadata(?, ?, ?, ?, ?, ?)', [id, userId, title, author, categoryId, pages]);
+         await db.execute('CALL sp_update_book_metadata(?, ?, ?, ?, ?, ?)', [id, userId, title, author, category, pages]);
          return true;
 
      }
